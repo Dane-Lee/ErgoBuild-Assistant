@@ -28,6 +28,8 @@ export interface IntakeData {
   population: string;
   task: string;
   constraints: string[];
+  taskFrequencyPerHour?: number;
+  dailyExposureHours?: number;
 }
 
 interface IntakeFormProps {
@@ -40,15 +42,31 @@ export default function IntakeForm({ disabled, onAnalyze }: IntakeFormProps) {
   const [population, setPopulation] = useState("");
   const [task, setTask] = useState("");
   const [constraints, setConstraints] = useState<string[]>([]);
+  const [frequency, setFrequency] = useState("");
+  const [duration, setDuration] = useState("");
 
   const toggleConstraint = (tag: string) =>
     setConstraints((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
 
   const canSubmit = task.trim().length > 0 && !disabled;
 
+  const parseOptionalNumber = (v: string): number | undefined => {
+    const trimmed = v.trim();
+    if (trimmed === "") return undefined;
+    const n = Number(trimmed);
+    return Number.isFinite(n) ? n : undefined;
+  };
+
   const submit = () => {
     if (!canSubmit) return;
-    onAnalyze({ domain, population: population.trim(), task: task.trim(), constraints });
+    onAnalyze({
+      domain,
+      population: population.trim(),
+      task: task.trim(),
+      constraints,
+      taskFrequencyPerHour: parseOptionalNumber(frequency),
+      dailyExposureHours: parseOptionalNumber(duration),
+    });
   };
 
   return (
@@ -102,6 +120,40 @@ export default function IntakeForm({ disabled, onAnalyze }: IntakeFormProps) {
       <div className="mt-4">
         <span className="mb-2 block text-sm font-medium text-ink-700 dark:text-slate-300">Constraints</span>
         <ConstraintTags options={CONSTRAINT_OPTIONS} selected={constraints} onToggle={toggleConstraint} />
+      </div>
+
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <label className="block">
+          <span className="mb-1 block text-sm font-medium text-ink-700 dark:text-slate-300">
+            Task frequency (per hour)
+          </span>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={frequency}
+            onChange={(e) => setFrequency(e.target.value)}
+            placeholder="optional — Claude will ask if blank"
+            disabled={disabled}
+            className="w-full rounded-lg border border-ink-300 bg-white px-3 py-2 text-sm focus:border-accent-500 focus:outline-none focus:ring-1 focus:ring-accent-500 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+          />
+        </label>
+
+        <label className="block">
+          <span className="mb-1 block text-sm font-medium text-ink-700 dark:text-slate-300">
+            Daily exposure (hours)
+          </span>
+          <input
+            type="number"
+            min="0"
+            step="0.5"
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+            placeholder="optional — Claude will ask if blank"
+            disabled={disabled}
+            className="w-full rounded-lg border border-ink-300 bg-white px-3 py-2 text-sm focus:border-accent-500 focus:outline-none focus:ring-1 focus:ring-accent-500 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+          />
+        </label>
       </div>
 
       <div className="mt-5 flex justify-end">

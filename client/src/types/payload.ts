@@ -3,7 +3,10 @@ export interface ErgonomicPayload {
   primary_risk_factors: string[];
   design_interventions: string[];
   preserve_geometries?: string[];
+  spatial_constraints?: string[];
   force_load_newtons: number;
+  task_frequency_per_hour?: number;
+  daily_exposure_hours?: number;
   material_options?: string[];
   safety_factor: number;
   applicable_standards?: string[];

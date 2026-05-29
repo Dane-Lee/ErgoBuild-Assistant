@@ -17,6 +17,12 @@ function composeIntakeMessage(data: IntakeData): string {
     `Domain: ${data.domain}`,
     data.population ? `User population: ${data.population}` : null,
     data.constraints.length ? `Constraints: ${data.constraints.join(", ")}` : null,
+    data.taskFrequencyPerHour !== undefined
+      ? `Task frequency: ${data.taskFrequencyPerHour} times per hour`
+      : null,
+    data.dailyExposureHours !== undefined
+      ? `Daily exposure: ${data.dailyExposureHours} hours per shift`
+      : null,
     "",
     `Problem: ${data.task}`,
   ].filter((l): l is string => l !== null);

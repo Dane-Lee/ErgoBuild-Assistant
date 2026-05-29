@@ -68,12 +68,21 @@ export default function PayloadPanel({ payload }: PayloadPanelProps) {
             <Field label="Design interventions">
               <TagList items={payload.design_interventions} />
             </Field>
-            <Field label="Preserve geometries">
+            <Field label="Preserve geometries (human contact)">
               <TagList items={payload.preserve_geometries} />
+            </Field>
+            <Field label="Spatial constraints (infrastructure)">
+              <TagList items={payload.spatial_constraints} />
             </Field>
             <div className="grid grid-cols-2 gap-4">
               <Field label="Force load (N)">{payload.force_load_newtons}</Field>
               <Field label="Safety factor">{payload.safety_factor}</Field>
+              <Field label="Task frequency (per hour)">
+                {payload.task_frequency_per_hour ?? "—"}
+              </Field>
+              <Field label="Daily exposure (hours)">
+                {payload.daily_exposure_hours ?? "—"}
+              </Field>
             </div>
             <Field label="Material options">
               <TagList items={payload.material_options} />
