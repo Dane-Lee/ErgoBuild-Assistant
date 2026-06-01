@@ -9,6 +9,7 @@ import type {
   ChatMessage,
   ContentBlock,
   ErgonomicPayload,
+  RagSource,
   ToolUseBlock,
 } from "./types/payload";
 
@@ -37,6 +38,7 @@ export default function App() {
   const [history, setHistory] = useState<AnthropicMessage[]>([]);
   const [chat, setChat] = useState<ChatMessage[]>([]);
   const [payload, setPayload] = useState<ErgonomicPayload | null>(null);
+  const [sources, setSources] = useState<RagSource[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [started, setStarted] = useState(false);
@@ -61,6 +63,8 @@ export default function App() {
         .join("\n\n")
         .trim();
       if (text) setChat((prev) => [...prev, { role: "assistant", text }]);
+
+      if (res.sources && res.sources.length) setSources(res.sources);
 
       // Latest payload from a tool_use block, if present.
       const toolUses = res.content.filter(isToolUse);
@@ -97,6 +101,7 @@ export default function App() {
     setHistory([]);
     setChat([]);
     setPayload(null);
+    setSources([]);
     setError(null);
     setStarted(false);
   };
@@ -132,7 +137,7 @@ export default function App() {
 
       <div className="grid min-h-[60vh] flex-1 grid-cols-1 gap-5 lg:grid-cols-2">
         <ChatPanel messages={chat} loading={loading} onSend={runTurn} />
-        <PayloadPanel payload={payload} />
+        <PayloadPanel payload={payload} sources={sources} />
       </div>
     </div>
   );

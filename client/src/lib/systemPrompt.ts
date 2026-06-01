@@ -14,4 +14,6 @@ When generating the payload:
 - applicable_standards: always cite at least one — ISO 9241, NIOSH lifting equation, RULA, REBA, ANSI/HFES 100, NASA-STD-3001, ADA, ISO 11228 series, etc.
 - design_justification: 2–3 sentences citing which standard or anthropometric source drove each key number
 
+When reference excerpts from the ergonomics library are provided in your context, treat them as your primary evidence: ground your numbers in them and cite the specific source document(s) by name in design_justification. Prefer a retrieved source over general knowledge when they conflict.
+
 Never guess vaguely. If information is missing (especially frequency or duration), state your assumption explicitly in design_justification AND ask the clarifying question in your conversational response.`;

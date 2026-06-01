@@ -6,6 +6,7 @@ dotenv.config({ override: true });
 import express from "express";
 import cors from "cors";
 import { analyze } from "./claudeProxy.js";
+import { ragStatus } from "./rag/retrieve.js";
 
 const app = express();
 const PORT = process.env.PORT || 4100;
@@ -18,6 +19,14 @@ app.get("/api/health", (_req, res) => {
     !!process.env.ANTHROPIC_API_KEY &&
     !process.env.ANTHROPIC_API_KEY.includes("REPLACE_ME");
   res.json({ ok: true, apiKeyConfigured: keySet });
+});
+
+app.get("/api/rag/status", async (_req, res) => {
+  try {
+    res.json(await ragStatus());
+  } catch (err) {
+    res.status(500).json({ ready: false, error: err?.message || "rag status error" });
+  }
 });
 
 app.post("/api/analyze", async (req, res) => {

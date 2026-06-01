@@ -6,3 +6,7 @@ dist
 
 # Local editor / Claude Code settings
 .claude/settings.local.json
+
+# RAG corpus (large, copyrighted source PDFs) and generated vector store
+corpus/
+server/rag/store/

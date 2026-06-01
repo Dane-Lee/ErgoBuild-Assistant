@@ -1,8 +1,9 @@
 import { useState } from "react";
-import type { ErgonomicPayload } from "../types/payload";
+import type { ErgonomicPayload, RagSource } from "../types/payload";
 
 interface PayloadPanelProps {
   payload: ErgonomicPayload | null;
+  sources?: RagSource[];
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -27,8 +28,9 @@ function TagList({ items }: { items?: string[] }) {
   );
 }
 
-export default function PayloadPanel({ payload }: PayloadPanelProps) {
+export default function PayloadPanel({ payload, sources = [] }: PayloadPanelProps) {
   const [copied, setCopied] = useState(false);
+  const uniqueSources = Array.from(new Set(sources.map((s) => s.source)));
 
   const copyJson = async () => {
     if (!payload) return;
@@ -93,6 +95,18 @@ export default function PayloadPanel({ payload }: PayloadPanelProps) {
             <Field label="Design justification">
               <p className="leading-relaxed text-ink-700 dark:text-slate-300">{payload.design_justification}</p>
             </Field>
+            {uniqueSources.length > 0 && (
+              <Field label="Reference sources (retrieved)">
+                <ul className="space-y-1">
+                  {uniqueSources.map((s) => (
+                    <li key={s} className="text-xs text-ink-700 dark:text-slate-300">
+                      <span className="mr-1 text-accent-600 dark:text-accent-500">●</span>
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              </Field>
+            )}
           </>
         )}
       </div>

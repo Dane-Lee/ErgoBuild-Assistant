@@ -35,9 +35,15 @@ export interface ToolUseBlock {
 
 export type ContentBlock = TextBlock | ToolUseBlock | { type: string; [k: string]: unknown };
 
+export interface RagSource {
+  source: string;
+  score: number;
+}
+
 export interface AnalyzeResponse {
   content: ContentBlock[];
   stop_reason: string;
+  sources?: RagSource[];
 }
 
 // Anthropic message format sent to the backend.
