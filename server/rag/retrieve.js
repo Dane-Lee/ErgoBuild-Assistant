@@ -43,21 +43,46 @@ function normalizeQuery(vec) {
   return vec.map((v) => v / norm);
 }
 
+const MAX_PER_SOURCE = Number(process.env.RAG_MAX_PER_SOURCE) || 2;
+
 /**
- * Retrieve the top-k most relevant chunks for a query.
+ * Retrieve the top-k most relevant chunks for a query, with a per-source cap so a
+ * single large document can't crowd out other relevant guidebooks (diversity).
  * Returns [] if no index has been built (RAG is optional).
  * @param {string} query
  * @param {number} [k]
+ * @param {number} [maxPerSource]
  * @returns {Promise<Array<{ source:string, text:string, score:number }>>}
  */
-export async function retrieve(query, k = 6) {
+export async function retrieve(query, k = 6, maxPerSource = MAX_PER_SOURCE) {
   const s = await loadStore();
   if (!s || !query?.trim()) return [];
 
   const qvec = normalizeQuery(await embedQuery(query));
   const scored = s.chunks.map((c) => ({ source: c.source, text: c.text, score: dot(qvec, c.embedding) }));
   scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, k);
+
+  // Greedily pick by score while enforcing the per-source cap.
+  const perSource = new Map();
+  const picked = [];
+  for (const cand of scored) {
+    const used = perSource.get(cand.source) || 0;
+    if (used >= maxPerSource) continue;
+    perSource.set(cand.source, used + 1);
+    picked.push(cand);
+    if (picked.length >= k) break;
+  }
+
+  // If the cap left us short (small/narrow corpus), top up by raw score.
+  if (picked.length < k) {
+    const chosen = new Set(picked);
+    for (const cand of scored) {
+      if (chosen.has(cand)) continue;
+      picked.push(cand);
+      if (picked.length >= k) break;
+    }
+  }
+  return picked;
 }
 
 /**

@@ -28,7 +28,7 @@ Match Command Station's stack for consistency:
 
 - Frontend: React + TypeScript + Vite + Tailwind CSS
 - Backend: Node.js + Express (lightweight — only purpose is to proxy Anthropic API calls so the API key stays out of the browser)
-- AI: Anthropic API, model `claude-sonnet-4-20250514`
+- AI: Anthropic API, model `claude-sonnet-4-6`
 - Future Phase 3: Local vector DB (start with simple file-based RAG, upgrade to ChromaDB or pgvector only if needed)
 
 ## File structure
@@ -195,3 +195,16 @@ Issues caught during early testing and the fixes applied to this MTD:
   weight in Newtons (1 lb ≈ 4.45 N) and not fabricate scaling factors unless citing a real standard.
 - Anthropometric reasoning was generic. Not fixing in the prompt — this is the core motivation for
   Phase 3 RAG over real guidebooks. Hardcoding fixes here would mask the real solution.
+
+## Implementation status (as built)
+
+- Phases 1–2: complete. Model updated to `claude-sonnet-4-6`; prompt caching added (stable
+  tools+system prefix, RAG context injected into the user turn after the cache breakpoint).
+- Phase 3 RAG: live with a file-based vector store (`server/rag/`), Voyage AI embeddings
+  (`voyage-3.5`), and per-source-capped cosine retrieval. 140 text-bearing guidebook PDFs indexed
+  on the free Voyage tier (~1,356 chunks). Pending a paid Voyage key: the ~15 large reference
+  textbooks/Six-Sigma books (~34K chunks) and OCR for 4 scanned PDFs. Retrieved sources are shown
+  in the UI and cited in `design_justification`.
+- Beyond spec: light/dark mode toggle, saved-analyses history sidebar (localStorage), and
+  export-to-PDF report.
+- Frontend runs on `localhost:5273` (moved off Vite's default 5173).

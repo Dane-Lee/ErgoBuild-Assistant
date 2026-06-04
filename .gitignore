@@ -10,3 +10,8 @@ dist
 # RAG corpus (large, copyrighted source PDFs) and generated vector store
 corpus/
 server/rag/store/
+
+# Secrets — never commit API keys or credential docs
+*API Key*
+*api-key*
+*.key

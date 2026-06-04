@@ -83,6 +83,21 @@ async function main() {
       records.push({ id: `${source}#${i}`, source, chunkIndex: i, text: chunk });
     });
   }
+
+  // 1b. Also ingest any OCR sidecars (produced by `npm run rag:ocr`).
+  const ocrFiles = (await readdir(CORPUS_DIR)).filter((f) => f.toLowerCase().endsWith(".ocr.txt"));
+  for (const file of ocrFiles) {
+    const text = (await readFile(join(CORPUS_DIR, file), "utf8")).trim();
+    if (text.length < MIN_DOC_CHARS) {
+      skipped.push({ file, reason: `OCR sidecar too short (${text.length} chars)` });
+      continue;
+    }
+    const source = file.replace(/\.ocr\.txt$/i, "");
+    chunkText(text).forEach((chunk, i) => {
+      records.push({ id: `${source}#${i}`, source, chunkIndex: i, text: chunk });
+    });
+  }
+
   if (skipped.length) {
     console.log(`Skipped ${skipped.length}: ${skipped.map((s) => s.file).join(", ")}`);
   }
@@ -91,12 +106,23 @@ async function main() {
     process.exit(1);
   }
 
-  // 2. Resume: reuse embeddings already in the checkpoint.
+  // 2. Resume: reuse embeddings already in the checkpoint AND in a prior store
+  //    (so growing the manifest only embeds the new documents — incremental).
   await mkdir(STORE_DIR, { recursive: true });
   const done = await loadCheckpoint();
+  if (existsSync(STORE_PATH)) {
+    try {
+      const prior = JSON.parse(await readFile(STORE_PATH, "utf8"));
+      if (prior.model === VOYAGE_MODEL) {
+        for (const c of prior.chunks) if (!done.has(c.id)) done.set(c.id, c.embedding);
+      }
+    } catch {
+      /* ignore unreadable prior store */
+    }
+  }
   const todo = records.filter((r) => !done.has(r.id));
   console.log(
-    `${records.length} chunks total; ${done.size} already embedded (checkpoint); ${todo.length} to embed via ${VOYAGE_MODEL}.`
+    `${records.length} chunks total; ${done.size} already embedded (reused); ${todo.length} to embed via ${VOYAGE_MODEL}.`
   );
 
   // 3. Embed remaining, appending to the checkpoint after every batch.

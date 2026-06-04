@@ -25,14 +25,22 @@ function getKey() {
 async function embedBatch(inputs, inputType, key) {
   let lastBody = "";
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const res = await fetch(VOYAGE_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${key}`,
-      },
-      body: JSON.stringify({ input: inputs, model: VOYAGE_MODEL, input_type: inputType }),
-    });
+    let res;
+    try {
+      res = await fetch(VOYAGE_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${key}`,
+        },
+        body: JSON.stringify({ input: inputs, model: VOYAGE_MODEL, input_type: inputType }),
+      });
+    } catch (netErr) {
+      // Network blip (e.g. "fetch failed") — retryable, same as a 5xx.
+      lastBody = netErr?.message || "network error";
+      await sleep(Math.min(30000, 1000 * 2 ** attempt));
+      continue;
+    }
 
     if (res.status === 429 || res.status >= 500) {
       lastBody = (await res.text()).slice(0, 200);
@@ -53,28 +61,6 @@ async function embedBatch(inputs, inputType, key) {
   throw new Error(
     `Voyage API: exhausted ${MAX_ATTEMPTS} retries (rate limit or server error). Last: ${lastBody}`
   );
-}
-
-/**
- * Embed an array of document texts. Returns an array of vectors in the same order.
- * @param {string[]} texts
- * @param {(done:number,total:number)=>void} [onProgress]
- */
-export async function embedDocuments(texts, onProgress) {
-  const key = getKey();
-  const out = [];
-  for (let i = 0; i < texts.length; i += BATCH_SIZE) {
-    const batch = texts.slice(i, i + BATCH_SIZE);
-    const start = Date.now();
-    const vecs = await embedBatch(batch, "document", key);
-    out.push(...vecs);
-    onProgress?.(out.length, texts.length, vecs);
-    if (MIN_INTERVAL_MS > 0 && i + BATCH_SIZE < texts.length) {
-      const elapsed = Date.now() - start;
-      if (elapsed < MIN_INTERVAL_MS) await sleep(MIN_INTERVAL_MS - elapsed);
-    }
-  }
-  return out;
 }
 
 /**

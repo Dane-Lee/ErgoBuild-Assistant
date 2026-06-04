@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { ChatMessage } from "../types/payload";
 
 interface ChatPanelProps {
@@ -43,20 +45,26 @@ export default function ChatPanel({ messages, loading, onSend }: ChatPanelProps)
           </p>
         )}
 
-        {messages.map((m, i) => (
-          <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
-            <div
-              className={
-                "max-w-[85%] whitespace-pre-wrap rounded-lg px-4 py-2 text-sm " +
-                (m.role === "user"
-                  ? "bg-accent-600 text-white"
-                  : "border border-ink-300 bg-ink-100 text-ink-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100")
-              }
-            >
-              {m.text}
+        {messages.map((m, i) =>
+          m.role === "user" ? (
+            <div key={i} className="flex justify-end">
+              <div className="max-w-[85%] whitespace-pre-wrap rounded-lg bg-accent-600 px-4 py-2 text-sm text-white">
+                {m.text}
+              </div>
             </div>
-          </div>
-        ))}
+          ) : (
+            <div key={i} className="flex justify-start">
+              <div className="max-w-[90%] rounded-lg border border-ink-300 bg-ink-100 px-4 py-3 text-sm text-ink-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100">
+                <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-500 dark:text-slate-400">
+                  ErgoBuild
+                </div>
+                <div className="prose prose-sm max-w-none prose-headings:mt-3 prose-headings:mb-1 prose-p:my-1.5 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0 prose-pre:my-2 dark:prose-invert">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.text}</ReactMarkdown>
+                </div>
+              </div>
+            </div>
+          )
+        )}
 
         {loading && (
           <div className="flex justify-start">

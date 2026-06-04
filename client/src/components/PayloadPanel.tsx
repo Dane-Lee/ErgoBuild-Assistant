@@ -1,9 +1,11 @@
 import { useState } from "react";
-import type { ErgonomicPayload, RagSource } from "../types/payload";
+import type { ChatMessage, ErgonomicPayload, RagSource } from "../types/payload";
+import { exportReport } from "../lib/report";
 
 interface PayloadPanelProps {
   payload: ErgonomicPayload | null;
   sources?: RagSource[];
+  chat?: ChatMessage[];
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -28,7 +30,7 @@ function TagList({ items }: { items?: string[] }) {
   );
 }
 
-export default function PayloadPanel({ payload, sources = [] }: PayloadPanelProps) {
+export default function PayloadPanel({ payload, sources = [], chat = [] }: PayloadPanelProps) {
   const [copied, setCopied] = useState(false);
   const uniqueSources = Array.from(new Set(sources.map((s) => s.source)));
 
@@ -45,14 +47,24 @@ export default function PayloadPanel({ payload, sources = [] }: PayloadPanelProp
         <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500 dark:text-slate-400">
           Engineering Payload
         </h2>
-        <button
-          type="button"
-          onClick={copyJson}
-          disabled={!payload}
-          className="rounded-md border border-ink-300 px-3 py-1 text-xs font-medium text-ink-700 transition-colors hover:border-accent-500 hover:text-accent-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-200 dark:hover:border-accent-500 dark:hover:text-accent-500"
-        >
-          {copied ? "Copied" : "Copy JSON"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => exportReport({ chat, payload, sources })}
+            disabled={!payload}
+            className="rounded-md border border-ink-300 px-3 py-1 text-xs font-medium text-ink-700 transition-colors hover:border-accent-500 hover:text-accent-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-200 dark:hover:border-accent-500 dark:hover:text-accent-500"
+          >
+            Report
+          </button>
+          <button
+            type="button"
+            onClick={copyJson}
+            disabled={!payload}
+            className="rounded-md border border-ink-300 px-3 py-1 text-xs font-medium text-ink-700 transition-colors hover:border-accent-500 hover:text-accent-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-200 dark:hover:border-accent-500 dark:hover:text-accent-500"
+          >
+            {copied ? "Copied" : "Copy JSON"}
+          </button>
+        </div>
       </header>
 
       <div className="flex-1 overflow-y-auto px-5 py-2">
